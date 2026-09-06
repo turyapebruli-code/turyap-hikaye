@@ -1,0 +1,44 @@
+name: Instagram hikaye paylas
+
+on:
+  schedule:
+    # Her 4 saatte bir (UTC). Turkiye saati: 08:00, 12:00, 16:00, 20:00, 00:00, 04:00
+    - cron: "0 5,9,13,17,21,1 * * *"
+  workflow_dispatch:        # Elle de calistirilabilsin
+
+permissions:
+  contents: write           # durum.json'u geri yazabilmek icin
+
+concurrency:
+  group: hikaye
+  cancel-in-progress: false
+
+jobs:
+  paylas:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Depoyu al
+        uses: actions/checkout@v4
+
+      - name: Python kur
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Hikayeyi paylas
+        env:
+          IG_KULLANICI_ID: ${{ secrets.IG_KULLANICI_ID }}
+          ERISIM_ANAHTARI: ${{ secrets.ERISIM_ANAHTARI }}
+        run: python paylas.py
+
+      - name: Sirayi kaydet
+        run: |
+          if git diff --quiet durum.json; then
+            echo "durum.json degismedi"
+          else
+            git config user.name "turyap-bot"
+            git config user.email "bot@users.noreply.github.com"
+            git add durum.json
+            git commit -m "sira ilerledi"
+            git push
+          fi
