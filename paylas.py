@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Sıradaki hikâyeyi Instagram'da yayınlar.
 
-GitHub Actions her 4 saatte bir çalıştırır. Hangi görselin sırada olduğunu
+GitHub Actions her saat çalıştırır; son paylaşımdan 7 saat geçtiyse paylaşır. Hangi görselin sırada olduğunu
 durum.json tutar; paylaşım başarılı olursa sıra bir ilerler ve depoya
 geri yazılır. Liste bitince başa döner.
 
@@ -9,6 +9,7 @@ Gerekli ortam değişkenleri (GitHub Secrets):
   IG_KULLANICI_ID  - Instagram işletme hesabı kimliği
   ERISIM_ANAHTARI  - Süresiz Sayfa erişim anahtarı
 """
+import calendar
 import json
 import os
 import sys
@@ -19,6 +20,8 @@ import urllib.request
 SURUM = "v23.0"
 GORSEL_KLASOR = "gorseller"
 DURUM_DOSYA = "durum.json"
+ARALIK_SAAT = 7          # iki hikâye arası (kullanıcı kararı, 8 Kasım 2026)
+TOLERANS_SAAT = 0.25     # Actions zamanlayıcısı birkaç dakika kayabiliyor
 
 
 def cik(mesaj):
@@ -58,6 +61,17 @@ def durumu_oku(toplam):
         return 0
 
 
+def son_paylasimdan_beri_saat():
+    """Son başarılı paylaşımdan bu yana geçen saat; bilinmiyorsa None."""
+    try:
+        with open(DURUM_DOSYA, encoding="utf-8") as f:
+            z = json.load(f).get("son_zaman", "")
+        t = calendar.timegm(time.strptime(z, "%Y-%m-%d %H:%M:%S UTC"))
+    except (OSError, ValueError, json.JSONDecodeError):
+        return None
+    return (time.time() - t) / 3600
+
+
 def durumu_yaz(sira, dosya):
     with open(DURUM_DOSYA, "w", encoding="utf-8") as f:
         json.dump({"sira": sira,
@@ -76,6 +90,14 @@ def main():
         cik("IG_KULLANICI_ID veya ERISIM_ANAHTARI tanımlı değil (GitHub Secrets)")
     if not depo:
         cik("GITHUB_REPOSITORY yok — bu script GitHub Actions içinde çalışmalı")
+
+    # Zamanlayıcı her saat uyanır; son paylaşımdan ARALIK_SAAT geçmediyse çıkar.
+    # Elle çalıştırmada (ZORLA=1) beklemeden paylaşır.
+    gecen = son_paylasimdan_beri_saat()
+    if os.environ.get("ZORLA") != "1" and gecen is not None and gecen < ARALIK_SAAT - TOLERANS_SAAT:
+        print(f"Son paylaşımdan bu yana {gecen:.1f} saat geçti; "
+              f"{ARALIK_SAAT} saat dolmadı, bu tur paylaşım yok.")
+        return
 
     gorseller = gorselleri_bul()
     sira = durumu_oku(len(gorseller))

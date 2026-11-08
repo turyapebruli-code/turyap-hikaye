@@ -2,8 +2,9 @@ name: Instagram hikaye paylas
 
 on:
   schedule:
-    # Her 4 saatte bir (UTC). Turkiye saati: 08:00, 12:00, 16:00, 20:00, 00:00, 04:00
-    - cron: "0 5,9,13,17,21,1 * * *"
+    # Her saat uyanir; paylas.py son paylasimdan 7 saat gectiyse paylasir.
+    # (24 saat 7'ye bolunmedigi icin sabit cron yerine bu yontem kullanildi.)
+    - cron: "17 * * * *"
   workflow_dispatch:        # Elle de calistirilabilsin
 
 permissions:
@@ -29,6 +30,7 @@ jobs:
         env:
           IG_KULLANICI_ID: ${{ secrets.IG_KULLANICI_ID }}
           ERISIM_ANAHTARI: ${{ secrets.ERISIM_ANAHTARI }}
+          ZORLA: ${{ github.event_name == 'workflow_dispatch' && '1' || '0' }}
         run: python paylas.py
 
       - name: Sirayi kaydet

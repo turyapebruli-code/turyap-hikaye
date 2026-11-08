@@ -1,14 +1,14 @@
 # Turyap Hikaye Otomasyonu
 
 Google yorumlarindan uretilmis hikaye gorsellerini Instagram'da
-(@turyap.ebruli) 4 saatte bir otomatik yayinlar.
+(@turyap.ebruli) 7 saatte bir otomatik yayinlar.
 
 ## Nasil calisir
 
 - `gorseller/` icindeki JPEG'ler sirayla paylasilir, liste bitince basa doner.
 - `durum.json` sirayi tutar; her basarili paylasimdan sonra depoya geri yazilir.
-- `.github/workflows/hikaye.yml` zamanlayici (UTC 01,05,09,13,17,21 =
-  Turkiye saati 04:00, 08:00, 12:00, 16:00, 20:00, 00:00).
+- `.github/workflows/hikaye.yml` her saat uyanir; `paylas.py` son paylasimdan
+  7 saat gecmediyse paylasmadan cikar (`ARALIK_SAAT` ile degistirilir).
 - Paylasim basarisiz olursa is HATA ile biter ve GitHub otomatik e-posta atar.
 
 ## Gerekli ayarlar (Settings > Secrets and variables > Actions)
@@ -27,8 +27,9 @@ Buradaki gorseller zaten herkese acik Google yorumlarindan uretilmistir.
 ## Yeni yorum eklemek
 
 Yeni hikaye gorsellerini `gorseller/` klasorune ekleyin, isimlendirme
-sirasi belirler (hikaye_41.jpg gibi).
+sirasi belirler (hikaye_110.jpg gibi). Gorseller ../turyap-hikaye/hikaye_uret_v2.py ile uretilir..
 
 ## Elle calistirma
 
 Actions sekmesi > "Instagram hikaye paylas" > "Run workflow".
+Elle calistirma 7 saati beklemeden hemen paylasir.
